@@ -8,7 +8,6 @@ ADD start.sh /tmp/
 ADD setup.py /tmp/
 ADD makesite.sh /tmp/
 ADD nginx.conf /etc/nginx/
-ADD sites.conf.tmpl /etc/docker-gen/
 
 EXPOSE 80
 EXPOSE 443

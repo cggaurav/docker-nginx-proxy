@@ -129,13 +129,13 @@ def write_certificates(data, args):
     path = "%sserver-%s.crt" % (args.certs, k)
     print "# Writing %s " % (path)
     f = open(path, "w")
-    f.write(v["crt"])
+    f.write(re.sub(r"\\n", '\n', v["crt"]) + '\n')
     f.close()
 
     path = "%sserver-%s.key" % (args.certs, k)
     print "# Writing %s " % (path)
     f = open(path, "w")
-    f.write(v["key"])
+    f.write(re.sub(r"\\n", '\n', v["key"]) + '\n')
     f.close()
 
 
