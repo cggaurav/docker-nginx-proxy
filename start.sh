@@ -19,4 +19,3 @@ then
 else
   echo "Error"
 fi
-

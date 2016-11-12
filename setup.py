@@ -173,36 +173,21 @@ def generate_config_file(data, args):
     v = vhosts[key]
     print "# VHOST", key, v
     output += "#\n# VHOST %s\n#\n\n" % (json.dumps(v))
-    output += "upstream %s-origin {\n" % (key)
-    targets = v["targets"]
-    for k2 in targets:
-      output += "  server %s:%s;\n" % (targets[k2]["addr"], targets[k2]["port"])
-    output += "}\n\n"
-
-    domains = v['domains']
-    for domain in domains:
-      sslinfo = get_certificate_paths(data, args, domain)
-      print "# DOMAIN", domain, sslinfo
-      output += "#\n# DOMAIN %s %s\n#\n\n" % (json.dumps(domain), json.dumps(sslinfo))
-      output += "server {\n"
-      output += "  listen 80;\n"
-      output += "  server_name %s;\n" % (domain)
-      output += "  location / {\n"
-      output += "    proxy_pass http://%s-origin;\n" % (key)
-      output += "    proxy_set_header Host $host;\n"
-      output += "    proxy_set_header X-Forwarded-For $remote_addr;\n"
-      output += "    proxy_next_upstream_timeout 5s;\n"
-      output += "    proxy_read_timeout 10s;\n"
-      output += "    proxy_send_timeout 10s;\n"
-      output += "  }\n"
+    if 'targets' in v:
+      output += "upstream %s-origin {\n" % (key)
+      targets = v["targets"]
+      for k2 in targets:
+        output += "  server %s:%s;\n" % (targets[k2]["addr"], targets[k2]["port"])
       output += "}\n\n"
-      if sslinfo:
+
+      domains = v['domains']
+      for domain in domains:
+        sslinfo = get_certificate_paths(data, args, domain)
+        print "# DOMAIN", domain, sslinfo
+        output += "#\n# DOMAIN %s %s\n#\n\n" % (json.dumps(domain), json.dumps(sslinfo))
         output += "server {\n"
-        output += "  listen 443;\n"
+        output += "  listen 80;\n"
         output += "  server_name %s;\n" % (domain)
-        output += "  ssl on;\n"
-        output += "  ssl_certificate %s;\n" % (sslinfo['crtpath'])
-        output += "  ssl_certificate_key %s;\n" % (sslinfo['keypath'])
         output += "  location / {\n"
         output += "    proxy_pass http://%s-origin;\n" % (key)
         output += "    proxy_set_header Host $host;\n"
@@ -212,6 +197,24 @@ def generate_config_file(data, args):
         output += "    proxy_send_timeout 10s;\n"
         output += "  }\n"
         output += "}\n\n"
+        if sslinfo:
+          output += "server {\n"
+          output += "  listen 443;\n"
+          output += "  server_name %s;\n" % (domain)
+          output += "  ssl on;\n"
+          output += "  ssl_certificate %s;\n" % (sslinfo['crtpath'])
+          output += "  ssl_certificate_key %s;\n" % (sslinfo['keypath'])
+          output += "  location / {\n"
+          output += "    proxy_pass http://%s-origin;\n" % (key)
+          output += "    proxy_set_header Host $host;\n"
+          output += "    proxy_set_header X-Forwarded-For $remote_addr;\n"
+          output += "    proxy_next_upstream_timeout 5s;\n"
+          output += "    proxy_read_timeout 10s;\n"
+          output += "    proxy_send_timeout 10s;\n"
+          output += "  }\n"
+          output += "}\n\n"
+      else:
+        print "# invalid upstream, no targets found."
 
   return output
 
