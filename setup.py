@@ -61,14 +61,21 @@ def parse_env(envs):
     if r:
       vhostkey = r.group(1)
       vhostprop = "target." + r.group(2)+".port"
-      # print "virtual port:", r.group(1), r.group(2), r.group(3), val
+      print "virtual port:", r.group(1), r.group(2), r.group(3), val
+      val = int(val)
       if not vhosts.has_key(vhostkey):
         vhosts[vhostkey] = {}
       if not vhosts[vhostkey].has_key("targets"):
         vhosts[vhostkey]["targets"] = {}
       if not vhosts[vhostkey]["targets"].has_key(r.group(2)):
         vhosts[vhostkey]["targets"][r.group(2)] = {}
-      vhosts[vhostkey]["targets"][r.group(2)]["port"] = val
+      print vhosts[vhostkey]["targets"][r.group(2)]
+      if "port" in vhosts[vhostkey]["targets"][r.group(2)]:
+        # pick lowest port.
+        if val < vhosts[vhostkey]["targets"][r.group(2)]["port"]:
+          vhosts[vhostkey]["targets"][r.group(2)]["port"] = val
+      else:
+        vhosts[vhostkey]["targets"][r.group(2)]["port"] = val
       continue
 
     r = re_server_crt.match(key)
@@ -123,7 +130,7 @@ def write_certificates(data, args):
   domaincerts = data['domains']
   for k in domaincerts:
     v = domaincerts[k]
-    print "# DOMAIN", k, v
+    # print "# DOMAIN", k, v
     # write certs to disk
 
     path = "%sserver-%s.crt" % (args.certs, k)
@@ -183,7 +190,7 @@ def generate_config_file(data, args):
       domains = v['domains']
       for domain in domains:
         sslinfo = get_certificate_paths(data, args, domain)
-        print "# DOMAIN", domain, sslinfo
+        # print "# DOMAIN", domain, sslinfo
         output += "#\n# DOMAIN %s %s\n#\n\n" % (json.dumps(domain), json.dumps(sslinfo))
         output += "server {\n"
         output += "  listen 80;\n"
